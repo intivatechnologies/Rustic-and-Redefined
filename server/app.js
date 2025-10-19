@@ -18,6 +18,8 @@ const stripe = require('stripe')(process.env.STRIPE_KEY);
 
 const PdfKit = require('pdfkit');
 
+const LOG_ALL = true;
+
 const app = express();
 
 //handling one write queue at a time and awaiting each read after all writes
@@ -29,7 +31,10 @@ const JSON_ASSOCIATIONS = [
 	'newsletter_subscriber_list.json'
 ];
 
-//concatObjects
+/**
+ * @factor two child elements followed by a chain sourced by their root elements
+ * @return a combination of the two child elements
+ */
 function combine(rootSrc, ...chain){
 	const { dataNew, dataOld } = rootSrc;
 	const newConcurrent = dataNew, oldConcurrent = dataOld;
@@ -42,6 +47,9 @@ function combine(rootSrc, ...chain){
 	return oldConcurrent.concat(newConcurrent);
 }
 
+/**
+ * @return a combination of the two dictionary objects
+ */
 function concatenateObjects(a, b) {
 	const result = { ...a };
 
@@ -49,7 +57,7 @@ function concatenateObjects(a, b) {
 		if (Array.isArray(a[key]) && Array.isArray(b[key]))
 		  result[key] = a[key].concat(b[key]); // concatenate arrays
 		else if (typeof a[key] === 'object' && typeof b[key] === 'object')
-		  result[key] = concatObjects(a[key], b[key]); // recursively merge
+		  result[key] = concatenateObjects(a[key], b[key]); // recursively merge
 		else
 		  result[key] = b[key]; // overwrite primitives
 	}
@@ -59,11 +67,12 @@ function concatenateObjects(a, b) {
 
 //IO CALLBACKS
 const IOCallbacks = {
-	printAnyError(err){
+	printAnyError: (err){
 		if(err)
 			console.error(err);
 	},
 	
+	/*
 	requestSubscription: [
 		(data) => {
 			
@@ -86,6 +95,7 @@ const IOCallbacks = {
 			return res.status(200).json({});
 		}
 	],
+	*/
 };
 
 const JsonBackupOverrides = {
@@ -95,8 +105,6 @@ const JsonBackupOverrides = {
 		ick = combine(dataset, 'itemCategoryKeys');
 		
 		return {
-				// "itemCategories": dataOld.itemCategories.concat(dataNew.itemCategories),
-				// "itemCategoryKeys": dataOld.itemCategoryKeys.concat(dataNew.itemCategoryKeys)
 			"itemCategories": ic,
 			"itemCategoryKeys": ick
 		};
@@ -104,7 +112,7 @@ const JsonBackupOverrides = {
 	
 	items: (dataNew, dataOld) => {
 		return {
-			"items": concatObjects(dataOld.items, dataNew.items)
+			"items": concatenateObjects(dataOld.items, dataNew.items)
 		};
 	},
 	
@@ -158,7 +166,7 @@ class IOProcessor {
 		return IOProcessor.instance;
 	}
 	
-	async write(fileIndex, data, callback){
+	async write(fileIndex, data){
 		this.backups[fileIndex].queue.push(data);
 		
 		var stockpile = null;
@@ -176,7 +184,7 @@ class IOProcessor {
 				resolve();
 			}, this.WAIT_PING));
 			
-		await new Promise((resolve, reject) => {
+		return await new Promise((resolve, reject) => {
 			fs.writeFile(
 				__dirname + ASSETS_JSON + JSON_ASSOCIATIONS[fileIndex],
 				JSON.stringify(stockpile, null, '\t'),
@@ -184,24 +192,18 @@ class IOProcessor {
 					if(err){
 						console.error(err);
 						reject(err);
-					} else {
-						callback(stockpile);
-						resolve();
-					}
+					} else 
+						resolve(stockpile);
 				}
 			);
 		});
 	}
 	
-	async read(fileIndex, callback){
-		if(this.backups[fileIndex].queue.length !== 0){
-			const interval = window.setInterval(() => {
-				if(this.backups[index].queue.length === 0)
-					window.clearInterval(interval);
-			}, this.READ_REFRESH);
-		}
+	async read(fileIndex){
+		while(this.backups[fileIndex].queue.length !== 0)
+			await new Promise(res => setTimeout(res, this.READ_REFRESH));
 		
-		const data = await new Promise((resolve, reject) => {
+		return await new Promise((resolve, reject) => {
 			fs.readFile(
 				__dirname + ASSETS_JSON + JSON_ASSOCIATIONS[file_index],
 				(err, data) => {
@@ -213,8 +215,6 @@ class IOProcessor {
 				}
 			);
 		});
-		
-		return callback(data);
 	}
 }
 
@@ -312,36 +312,30 @@ app.post('/send_inquiry_email', uploadAttachments.array("images"), (req, res) =>
 //NEWSLETTER
 
 var newsletterList = [];
-app.get('/newsletter/subscriber_list', bodyParser.json(), (req, res) => {
-	fs.readFile(__dirname + ASSETS_JSON + "newsletter_subscriber_list.json", (err, data) => {
-		if(err){
-			console.error(err);
-			res.status(500).json({});
-			return;
-		}
-
+app.get('/newsletter/subscriber_list', bodyParser.json(), async (req, res) => {
+	try{
+		const data = await IOProcessor.read(3);
+		
 		newsletterList = [];
-		data = JSON.parse(data);
 		for(let sub of data.subscribers){
 			if(sub.verified)
 				newsletterList.push(sub.email);
 		}
 
 		res.status(200).json({ subscribers: newsletterList })
-	});
+	} catch(err){
+		console.error(err);
+		res.status(500).json({});
+	}
 });
 
-app.post('/newsletter/request_subscription', bodyParser.json(), (req, res) => {
+app.post('/newsletter/request_subscription', bodyParser.json(), async (req, res) => {
 	let authentication = Date.now();
 	let filePath = __dirname + ASSETS_JSON + "newsletter_subscriber_list.json";
-
-	fs.readFile(filePath, (err, data) => {
-		if(err){
-			console.error(err);
-			return res.status(500).json({});
-		}
-
-		data = JSON.parse(data);
+	
+	try {
+		const data = await IOProcessor.read(3);
+		
 		for(let sub of data.subscribers){
 			if(sub.email === req.body.email){
 				if(!sub.verified){
@@ -367,48 +361,37 @@ app.post('/newsletter/request_subscription', bodyParser.json(), (req, res) => {
 			expiration: authentication + 14,
 			verified: false
 		});
-
-		/*
-		fs.writeFile(filePath, JSON.stringify(data, null, '\t'), err => {
-			if (err){
-				console.error(err);
-				return res.status(500).json({ err: "failed to store subscriber." });
-			}
-
-			sendEmail();
-			return res.status(200).json({});
-		});
-		*/
 		
-		/*
-		//IOProcessor.write(fileIndex, data)
-		IOProcessor.write(3, JSON.stringify(data, null, '\t'), err => {
-			if (err){
-				console.error(err);
-				return res.status(500).json({ err: "failed to store subscriber." });
-			}
-
-			sendEmail();
+		try {
+			await IOProcessor.write(3, data);
+			
+			transporter.sendMail({
+				from: process.env.NEWSLETTER_EMAIL,
+				to: req.body.email,
+				subject: "Please verify your email to keep up with our newsletter",
+				html: getHeaderImageTag() + "To verify your email, click this link: "
+					+ `<a href='${process.env.PORT_SERVER}/newsletter/request_subscription/${authentication}'>Click Here</a>`
+			});
+			
 			return res.status(200).json({});
-		});
-		*/
-		
-		IOProcessor.write(3, data, err => IOCallbacks.requestSubscription[1](data, req));
-	});
+		} catch(err) {
+			console.error(err);
+			return res.status(500).json({ err: "failed to store subscriber." });
+		}
+	} catch(err) {
+		console.error(err);
+		return res.status(500).json({});
+	}
 });
 
-app.get('/newsletter/request_subscription/:authentication', (req, res) => {
+app.get('/newsletter/request_subscription/:authentication', async (req, res) => {
 	res.redirect(`${process.env.PORT_CLIENT}/verify`);
 
 	let auth = Number(req.params.authentication);
 	let filePath = __dirname + ASSETS_JSON + "newsletter_subscriber_list.json";
-	fs.readFile(filePath, (err, data) => {
-		if(err){
-			console.error(err);
-			return;
-		}
-
-		data = JSON.parse(data);
+	try {
+		const data = await IOProcessor.read(3);
+		
 		for(let i = 0; i < data.subscribers.length; i++){
 			if(data.subscribers[i].authentication == auth){
 				delete data.subscribers[i].expiration;
@@ -416,22 +399,23 @@ app.get('/newsletter/request_subscription/:authentication', (req, res) => {
 				break;
 			}
 		}
-
-		/*
-		fs.writeFile(filePath, JSON.stringify(data, null, '\t'), (err, data) => {
-			if(err)
-				console.error(err);
-		});
-		*/
 		
-		//IOProcessor.write(fileIndex, data)
-		IOProcessor.write(3, data, err => IOCallbacks.printAnyError(err));
-	});
+		try {
+			await IOProcessor.write(3, data);
+		} catch(err){
+			console.error(err);
+			return res.status(500).json({});
+		}
+	} catch(err){
+		console.error(err);
+		return res.status(500).json({});
+	}
 });
 
 var newsletterSubject;
 var newsletterTextDivs;
 var newsletterImagesPerLane;
+
 app.post('/newsletter/send_text', bodyParser.json(), (req, res) => {
 	newsletterSubject = req.body.subject;
 	newsletterTextDivs = req.body.textDivs;
@@ -458,17 +442,10 @@ const newsletterStorage = multer.diskStorage({
 });
 const uploadNewsletterAttachment = multer({ storage: newsletterStorage });
 
-app.post('/newsletter/send_images', uploadNewsletterAttachment.array("images"), (req, res) => {
-	fs.readFile(__dirname + ASSETS_JSON + "newsletter_subscriber_list.json", (err, data) => {
-		if(err){
-			console.error(err);
-			res.sendStatus(500);
-			return;
-		} else
-			res.sendStatus(200);
-
-		data = JSON.parse(data);
-
+app.post('/newsletter/send_images', uploadNewsletterAttachment.array("images"), async (req, res) => {
+	try{
+		const data = await IOProcessor.read(3);
+		
 		//newsletter callback
 		let pending = data.subscribers.length, messagesSent = 0;
 		let pendingInterval = setInterval(() => {
@@ -520,39 +497,38 @@ app.post('/newsletter/send_images', uploadNewsletterAttachment.array("images"), 
 				if(err)
 					console.error(err);
 			});
-	});
+	} catch(err){
+		console.error(err);
+		res.sendStatus(500);
+	}
 });
 
-app.get('/newsletter/unsubscribe/:authentication', (req, res) => {
+app.get('/newsletter/unsubscribe/:authentication', async (req, res) => {
 	res.redirect(`${process.env.PORT_CLIENT}/unsubscribe`);
 
 	let auth = Number(req.params.authentication);
 	let filePath = __dirname + ASSETS_JSON + "newsletter_subscriber_list.json";
-
-	fs.readFile(filePath, (err, data) => {
-		if(err){
-			console.error(err);
-			return;
-		}
-
-		data = JSON.parse(data);
+	
+	try {
+		const data = await IOProcessor.read(3);
+		
 		for(let i = 0; i < data.subscribers.length; i++){
 			if(data.subscribers[i].authentication == auth){
 				data.subscribers.splice(i);
 				break;
 			}
 		}
-
-		/*
-		fs.writeFile(filePath, JSON.stringify(data, null, '\t'), (err, data) => {
-			if(err)
-				console.error(err);
-		});
-		*/
 		
-		//IOProcessor.write(fileIndex, data)
-		IOProcessor.write(3, JSON.stringify(data, null, '\t'), err => IOCallbacks.printAnyError(err));
-	});
+		try {
+			await IOProcessor.write(3, data);
+		} catch(err){
+			console.error(err);
+			res.sendStatus(500);
+		}
+	} catch(err){
+		console.error(err);
+		res.sendStatus(500);
+	}
 });
 
 //PROJECTS
@@ -561,214 +537,128 @@ const IMAGES_PROJECTS = "/assets/images/projects/";
 //SHOP
 const IMAGES_SHOP = "/assets/images/shop/";
 
-app.get('/item/categories', bodyParser.json(), (req, res) => {
-	fs.readFile(__dirname + ASSETS_JSON + "item_categories.json", (err, data) => {
-		if(err){
-			res.status(500).json({});
-			console.error(err);
-			return;
-		}
-
-		data = JSON.parse(data);
+app.get('/item/categories', bodyParser.json(), async (req, res) => {
+	try{
+		const data = await IOProcessor.read(0);
 		res.status(200).json({ itemCategories: data.itemCategories });
-	});
+	} catch(err){
+		console.error(err);
+		res.sendStatus(500);
+	}
 });
 
-app.get('/item/categories_and_keys', bodyParser.json(), (req, res) => {
-	fs.readFile(__dirname + ASSETS_JSON + "item_categories.json", (err, data) => {
-		if(err){
-			res.status(500).json({});
-			console.error(err);
-			return;
-		}
-
-		data = JSON.parse(data);
+app.get('/item/categories_and_keys', bodyParser.json(), async (req, res) => {
+	try{
+		const data = await IOProcessor.read(0);
+		
 		res.status(200).json({
 			itemCategories: data.itemCategories,
 			itemCategoryKeys: data.itemCategoryKeys
 		});
-	});
+	} catch(err){
+		console.error(err);
+		res.sendStatus(500);
+	}
 });
 
-app.post('/item/add_category', bodyParser.json(), (req, res) => {
+app.post('/item/add_category', bodyParser.json(), async (req, res) => {
 	let filePath = __dirname + ASSETS_JSON;
 	let key = 0;
-
-	fs.readFile(filePath + "item_categories.json", (err, data) => {
-		if(err){
+	
+	try{
+		const data = IOProcessor.read(0);
+		data.itemCategories.push(req.body.newCategory);
+			
+		//maximizes the chance that key is unique!
+		let unique = false;
+		while(!unique){
+			unique = true;
+			key = Date.now();
+			
+			for(let old_key of data.itemCategoryKeys)
+				if(old_key === key){
+					unique = false;
+					break;
+				}
+		}
+		data.itemCategoryKeys.push(key);
+		
+		try {
+			await IOProcessor.write(0, data);
+		} catch(err){
 			console.error(err);
 			res.status(500).json({});
-		} else {
-			data = JSON.parse(data);
-			data.itemCategories.push(req.body.newCategory);
-			
-			//maximizes the chance that key is unique!
-			let unique = false;
-			while(!unique){
-				unique = true;
-				key = Date.now();
-				
-				for(let old_key of data.itemCategoryKeys)
-					if(old_key === key){
-						unique = false;
-						break;
-					}
-			}
-			data.itemCategoryKeys.push(key);
-			
-			/*
-			fs.writeFile(filePath + "item_categories.json", JSON.stringify(data, null, '\t'), (err, data) => {
-				if(err){
-					console.error(err);
-					res.status(500).json({});
-				} else {
-					fs.readFile(filePath + "items.json", (err, data) => {
-						if(err){
-							console.error(err);
-							res.status(500).json({});
-						} else {
-							data = JSON.parse(data);
-							data.items[key] = [];
-							fs.writeFile(filePath + "items.json", JSON.stringify(data, null, '\t'), (err, data) => {
-								if(err){
-									console.error(err);
-									res.status(500).json({});
-								} else
-									return res.status(200).json({ itemCategoryKey: key });
-							});
-						}
-					});
-				}
-			});
-			*/
-			
-			//IOProcessor.write(fileIndex, data)
-			IOProcessor.write(0, JSON.stringify(data, null, '\t'), err => {
-				if(err){
-					console.error(err);
-					res.status(500).json({});
-				} else {
-					fs.readFile(filePath + "items.json", (err, data) => {
-						if(err){
-							console.error(err);
-							res.status(500).json({});
-						} else {
-							data = JSON.parse(data);
-							data.items[key] = [];
-							
-							/*
-							fs.writeFile(filePath + "items.json", JSON.stringify(data, null, '\t'), (err, data) => {
-								if(err){
-									console.error(err);
-									res.status(500).json({});
-								} else
-									return res.status(200).json({ itemCategoryKey: key });
-							});
-							*/
-							
-							IOProcessor.write(1, JSON.stringify(data, null, '\t'), err => {
-								if(err){
-									console.error(err);
-									res.status(500).json({});
-								} else
-									return res.status(200).json({ itemCategoryKey: key });
-							});
-						}
-					});
-				}
-			});
 		}
-	});
+		
+		try {
+			const data = await IOProcessor.read(1);
+			data.items[key] = [];
+			
+			try {
+				await IOProcessor.write(1, data);
+				res.status(200).json({});
+			} catch(err){
+				console.error(err);
+				res.status(500).json({});
+			}
+		} catch(err){
+			console.error(err);
+			res.status(500).json({});
+		}
+	} catch(err){
+		console.error(err);
+		res.sendStatus(500);
+	}
 });
 
-app.post('/item/delete_category', bodyParser.json(), (req, res) => {
+app.post('/item/delete_category', bodyParser.json(), async (req, res) => {
 	let filePath = __dirname + ASSETS_JSON;
-	fs.readFile(filePath + "item_categories.json", (err, data) => {
-		if(err){
-			console.error(err);
-			return;
-		}
-
+	
+	try {
+		const data = await IOProcessor.read(0);
+		
 		data = JSON.parse(data);
 		let keyRemoved = data.itemCategoryKeys[req.body.index] + "";
 		data.itemCategories = new Algorithm.DeleteAlgorithm(data.itemCategories).getProduct(req.body.index);
 		data.itemCategoryKeys = new Algorithm.DeleteAlgorithm(data.itemCategoryKeys).getProduct(req.body.index);
-
-		/*
-		fs.writeFile(filePath + "item_categories.json", JSON.stringify(data, null, '\t'), err => {
-			if(err){
-				console.error(err);
-				res.sendStatus(500);
-			} else{
-				fs.readFile(filePath + "items.json", (err, data) => {
-					if(err){
-						console.error(err);
-						return;
-					}
-
-					data = JSON.parse(data);
-					delete data.items[keyRemoved];
-					fs.writeFile(filePath + "items.json", JSON.stringify(data, null, '\t'), err => {
-						if(err){
-							console.error(err);
-							res.sendStatus(500);
-						} else
-							res.sendStatus(200);
-					})
-				});
-			}
-		});
-		*/
 		
-		//IOProcessor.write(fileIndex, data)
-		IOProcessor.write(0, JSON.stringify(data, null, '\t'), err => {
-			if(err){
+		try {
+			await IOProcessor.write(0, data);
+			
+			try{
+				const data = await IOProcessor.read(1);
+				data = JSON.parse(data);
+				delete data.items[keyRemoved];
+				
+				try {
+					await IOProcessor.write(1, data);
+					res.status(200).json({});
+				} catch(err){
+					console.error(err);
+					res.status(500).json({});
+				}
+			} catch(err){
 				console.error(err);
-				res.sendStatus(500);
-			} else{
-				fs.readFile(filePath + "items.json", (err, data) => {
-					if(err){
-						console.error(err);
-						return;
-					}
-
-					data = JSON.parse(data);
-					delete data.items[keyRemoved];
-					
-					/*
-					fs.writeFile(filePath + "items.json", JSON.stringify(data, null, '\t'), err => {
-						if(err){
-							console.error(err);
-							res.sendStatus(500);
-						} else
-							res.sendStatus(200);
-					});
-					*/
-					
-					IOProcessor.write(1, JSON.stringify(data, null, '\t'), err => {
-						if(err){
-							console.error(err);
-							res.sendStatus(500);
-						} else
-							res.sendStatus(200);
-					});
-				});
+				res.status(500).json({});
 			}
-		});
-	});
+		} catch(err){
+			console.error(err);
+			res.status(500).json({});
+		}
+	} catch(err){
+		console.error(err);
+		res.status(500).json({});
+	}
 });
 
-app.post('/item/visit_category', bodyParser.json(), (req, res) => {
-	let filePath = __dirname + ASSETS_JSON + "item_categories.json";
-	fs.readFile(filePath, (err, data) => {
-		if(err){
-			console.error(err);
-			return;
-		}
-
-		data = JSON.parse(data);
+app.post('/item/visit_category', bodyParser.json(), async (req, res) => {
+	try{
+		const data = IOProcessor.read(0);
 		return res.json({ itemCategoryKey: data.itemCategoryKeys[req.body.index] });
-	});
+	} catch(err){
+		console.error(err);
+		res.status(500).json({});
+	}
 });
 
 var itemAwaitingFiles = null;
@@ -808,7 +698,7 @@ const itemStorage = multer.diskStorage({
 
 const uploadItemImages = multer({ storage: itemStorage });
 
-app.post('/item/post_images', uploadItemImages.array("images"), (req, res) => {
+app.post('/item/post_images', uploadItemImages.array("images"), async (req, res) => {
 	if(itemAwaitingFiles.beforeImages.length != 0){
 		console.error("Error: item image lists must be empty at this point.");
 		res.sendStatus(500);
@@ -820,58 +710,44 @@ app.post('/item/post_images', uploadItemImages.array("images"), (req, res) => {
 			else
 				itemAwaitingFiles.afterImages.push(img.filename);
 		}
-
-		let filePath = __dirname + ASSETS_JSON + "items.json";
-		fs.readFile(filePath, (err, data) => {
-			if(err){
+		
+		try {
+			const data = await IOProcessor.read(1);
+			
+			let submission = {
+				itemInfo: itemAwaitingFiles.itemInfo,
+				beforeImages: itemAwaitingFiles.beforeImages,
+				afterImages: itemAwaitingFiles.afterImages
+			};
+			
+			if(itemAwaitingFiles.indexAt != -1)
+				data.items[itemAwaitingFiles.itemCategoryKey + '']
+					= new Algorithm.InsertAlgorithm(data.items[itemAwaitingFiles.itemCategoryKey + ''])
+					.getProduct(itemAwaitingFiles.indexAt, {
+						itemInfo: itemAwaitingFiles.itemInfo,
+						beforeImages: itemAwaitingFiles.beforeImages,
+						afterImages: itemAwaitingFiles.afterImages
+					});
+			else if(itemAwaitingFiles.selectIndex == undefined)
+				data.items[itemAwaitingFiles.itemCategoryKey + ''].push(submission);
+			else
+				data.items[itemAwaitingFiles.itemCategoryKey + ''][itemAwaitingFiles.selectIndex] = submission;
+			
+			try{
+				await IOProcessor.write(1, data);
+				
+				itemAwaitingFiles = null;
+				itemImageFiles = [];
+				
+				res.sendStatus(200);
+			} catch(err){
 				console.error(err);
 				res.sendStatus(500);
-			} else {
-				data = JSON.parse(data);
-				let submission = {
-					itemInfo: itemAwaitingFiles.itemInfo,
-					beforeImages: itemAwaitingFiles.beforeImages,
-					afterImages: itemAwaitingFiles.afterImages
-				};
-				
-				if(itemAwaitingFiles.indexAt != -1)
-					data.items[itemAwaitingFiles.itemCategoryKey + '']
-						= new Algorithm.InsertAlgorithm(data.items[itemAwaitingFiles.itemCategoryKey + ''])
-						.getProduct(itemAwaitingFiles.indexAt, {
-							itemInfo: itemAwaitingFiles.itemInfo,
-							beforeImages: itemAwaitingFiles.beforeImages,
-							afterImages: itemAwaitingFiles.afterImages
-						});
-				else if(itemAwaitingFiles.selectIndex == undefined)
-					data.items[itemAwaitingFiles.itemCategoryKey + ''].push(submission);
-				else
-					data.items[itemAwaitingFiles.itemCategoryKey + ''][itemAwaitingFiles.selectIndex] = submission;
-
-				/*
-				fs.writeFile(filePath, JSON.stringify(data, null, '\t'), err => {
-					itemAwaitingFiles = null;
-					itemImageFiles = [];
-
-					if(err){
-						console.error(err);
-						res.sendStatus(500);
-					} else
-						res.sendStatus(200);
-				});
-				*/
-				
-				IOProcessor.write(1, JSON.stringify(data, null, '\t'), err => {
-					itemAwaitingFiles = null;
-					itemImageFiles = [];
-
-					if(err){
-						console.error(err);
-						res.sendStatus(500);
-					} else
-						res.sendStatus(200);
-				});
 			}
-		});
+		} catch(err){
+			console.error(err);
+			res.sendStatus(500);
+		}
 	}
 });
 
