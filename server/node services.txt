@@ -1,0 +1,10 @@
+npm install express
+npm install cors
+npm install dotenv /* Process environment variables */
+npm install nodemailer
+npm install multer
+npm install body-parser
+/* npm install request */
+npm install axios
+npm install stripe --save
+npm install pdfkit

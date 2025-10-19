@@ -1,0 +1,222 @@
+#transaction-request-container{
+    background-color: rgba(0, 0, 0, 0.5);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 200;
+}
+
+.transaction-request{
+    position: fixed;
+    padding: 40pt 32pt;
+    background-color: #fdeed5;
+    border: solid rgb(25, 25, 25) 3pt;
+    color: rgb(25, 25, 25);
+    text-align: center;
+    top: 50%;
+    transform: translateY(-50%);
+    width: calc(100% - 16pt - 64pt - 6pt);
+    margin-left: 8pt;
+    margin-right: 8pt;
+    border-radius: 20pt;
+}
+
+.transaction-request label{
+    font-size: 12pt;
+    display: block;
+}
+
+.transaction-request input{
+    margin-bottom: 6pt;
+    background-color: white;
+    width: 175pt;
+}
+
+.transaction-request .transaction-button{
+    margin-top: 24pt;
+}
+
+#transaction-request-exit{
+    cursor: pointer;
+    position: fixed;
+    right: 18pt;
+    top: 18pt;
+    font-size: 26pt;
+}
+
+#shop-header h2{
+    padding-top: 120pt;
+    position: relative;
+    bottom: 30pt;
+}
+
+#toggle-btn:hover, #toggle-btn:active{
+    background-color: rgb(0, 0, 0, 0.5);
+}
+
+#toggle-btn, #toggle-btn:link, #toggle-btn:visited{
+    background-color: rgba(0, 0, 0, 0.2);
+    width: 55pt;
+    border: solid white 3pt;
+    border-radius: 50%;
+    padding: 2pt;
+    margin-top: 50pt;
+    cursor: pointer;
+}
+
+.toggle-menu, .toggle-menu-anim{
+    font-size: 18pt;
+    background-color: rgb(25, 25, 25);
+    color: white;
+    width: 0;
+    height: 100%;
+    position: fixed;
+    right: 0;
+    top: 0;
+}
+
+.toggle-menu-anim{
+    width: 72%;
+}
+
+#toggle-menu-inner{
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    margin-top: 50pt;
+}
+
+#toggle-menu-exit, .toggle-link, .toggle-link-anim{
+    opacity: 0;
+    pointer-events: none;
+}
+
+.toggle-link, .toggle-link-anim{
+    margin-bottom: 8pt;
+}
+
+.toggle-menu-anim #toggle-menu-exit, .toggle-menu-anim .toggle-link,
+.toggle-menu-anim .toggle-link-anim{
+    opacity: 1;
+    pointer-events: auto;
+    transition-delay: 0.2s;
+}
+
+.radio-button, .radio-outline{
+    position: absolute;
+}
+
+.radio-button{
+    width: 20pt;
+    height: 20pt;
+    right: calc(80% + 12pt);
+}
+
+.radio-ring, .radio-bg, .radio-fill{
+    border-radius: 50%;
+}
+
+.radio-outline, .radio-ring, .radio-bg{
+    width: 100%;
+    height: 100%;
+}
+
+.radio-outline{
+    width: 20pt;
+    height: 20pt;
+}
+
+.radio-ring{
+    border: solid white 2pt;
+    position: absolute;
+}
+
+.radio-bg{
+    background-color: rgb(25, 25, 25);
+}
+
+.radio-fill{
+    background-color: white;
+    width: 15pt;
+    height: 15pt;
+    position: absolute;
+    margin-top: 4pt;
+    margin-left: 4.5pt;
+    z-index: 1;
+}
+
+.toggle-link-label{
+    position: relative;
+    bottom: 2pt;
+    left: 6pt;
+}
+
+#toggle-menu-exit{
+    transition: 0.2s;
+    font-weight: 400;
+    font-size: 18pt;
+    margin-top: 25pt;
+    border: solid white 2pt;
+    padding: 4pt 8pt;
+    display: inline-block;
+    cursor: pointer;
+}
+
+#toggle-menu-exit:hover, #toggle-menu-exit:active, #toggle-menu-exit:visited, #toggle-menu-exit:link{
+    background-color: white;
+    color: black;
+    transition-delay: 0s;
+}
+
+.category-tag{
+    background-color: black;
+    color: white;
+    box-shadow: 0 4px 8px #888888;
+    padding: 4pt 0 4pt 6pt;
+    position: relative;
+}
+
+#marketplace-partners{
+    color: white;
+    background-color: rgb(25, 25, 25);
+    text-align: center;
+    padding-top: 6pt;
+}
+
+#marketplace-partners-group{
+    margin-top: 10pt;
+    width: 225pt;
+    margin-left: 50%;
+    transform: translateX(-50%);
+}
+
+#marketplace-partners-group a{
+    cursor: pointer;
+    transition: 0.2s;
+    display: inline-block;
+    margin-left: 4pt;
+    margin-right: 4pt;
+    font-size: 12pt;
+}
+
+#marketplace-partners-group a, #marketplace-partners-group a:visited{
+    color: white;
+}
+
+@media only screen and (min-width: 740px) and (min-height: 620px){
+    #transaction-request label{
+        text-align: left;
+        margin-left: 50%;
+        transform: translateX(-128pt);
+    }
+
+    #transaction-request input{
+        width: 250pt;
+    }
+
+    #marketplace-partners-group a:hover, #marketplace-partners-group a:active{
+        color: rgb(215, 215, 215);
+    }
+}

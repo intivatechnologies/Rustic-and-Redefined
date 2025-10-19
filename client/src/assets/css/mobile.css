@@ -1,0 +1,92 @@
+body{
+    background-color: #fdeed5;
+    margin: 0;
+    font-size: 14pt;
+}
+
+h1, h2, h3, h4, h5, h6{
+    font-family: 'Archivo Narrow', sans-serif;
+    margin: 0;
+}
+
+p, div, span, a, button, a.button{
+    font-family: 'Archivo Narrow', sans-serif;
+}
+
+img{
+    width: 235pt;
+}
+
+p{
+    font-size: 16pt;
+}
+
+.img-link{
+    text-decoration: none;
+    display: block;
+}
+
+.transition{
+    transition: none;
+}
+
+.default-transition{
+    transition: 0.4s;
+}
+
+.info, .big-subsection{
+    text-align: center;
+    padding: 20pt;
+    font-size: 14pt;
+}
+
+.transaction-button{
+    transition: 0.4s;
+    cursor: pointer;
+    width: 200pt;
+    border: solid black 1pt;
+    background-color: rgb(91, 6, 22);
+    color: white;
+    box-shadow: 1px 2px 4px black;
+    font-size: 16pt;
+    padding: 4pt;
+    margin-bottom: 20pt;
+}
+
+.mobile-only{
+    display: block;
+}
+
+.desktop-only{
+    display: none;
+}
+
+@media only screen and (min-width: 385px){
+    body, p{
+        font-size: 18pt;
+    }
+}
+
+@media only screen and (min-width: 740px) and (min-height: 950px){
+    body, p{
+        font-size: 22pt;
+    }
+}
+
+@media only screen and (orientation: landscape){
+    .portrait-only{
+        display: none;
+    }
+
+    @media only screen and (min-width: 820px){
+        body, p{
+            font-size: 14pt;
+        }
+    }
+
+    @media only screen and (min-width: 820px){
+        body, p{
+            font-size: 16pt;
+        }
+    }
+}

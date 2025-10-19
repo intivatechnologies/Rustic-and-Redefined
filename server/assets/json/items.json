@@ -1,0 +1,23 @@
+{
+	"items": {
+		"1760844610530": [
+			{
+				"itemInfo": {
+					"name": "Mike",
+					"about": "A vessel",
+					"price": "1.00",
+					"weight": 100,
+					"width": 40,
+					"height": 20,
+					"length": 10
+				},
+				"beforeImages": [],
+				"afterImages": [
+					"Item-1760844651386-0",
+					"Item-1760844651386-1",
+					"Item-1760844651386-2"
+				]
+			}
+		]
+	}
+}

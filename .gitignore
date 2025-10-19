@@ -1,0 +1,12 @@
+*.bak
+client/node_modules
+server/node_modules
+client/.git
+server/.git
+client/.env
+client/env_live.env
+server/.env
+server/env_live.env
+server/production/.env
+server/production/app.js
+Rustic-and-Redefined-backup.git

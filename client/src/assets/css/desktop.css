@@ -1,0 +1,22 @@
+@media only screen and (min-width: 1025px){
+    .info, .big-subsection{
+        text-align: left;
+    }
+
+    a.button{
+        top: 45pt;
+    }
+
+    .mobile-only{
+        display: none;
+    }
+    
+    .desktop-only{
+        display: block;
+    }
+
+    .transaction-button:hover, .transaction-button:active, .transaction-button:visited{
+        box-shadow: 2px 4px 8px black;
+        background-color: rgb(116, 31, 47);
+    }
+}

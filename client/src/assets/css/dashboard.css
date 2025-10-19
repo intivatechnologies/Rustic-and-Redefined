@@ -1,0 +1,432 @@
+.hidden{
+    opacity: 0;
+    pointer-events: none;
+}
+
+#dashboard{
+    margin-top: 20pt;
+}
+
+.expand-me{
+    margin-left: 25pt;
+    margin-bottom: 15pt;
+}
+
+.expand-me{
+    width: calc(100% - 50pt);
+}
+
+.expand-me .banner{
+    background-image: linear-gradient(to bottom, rgb(35, 35, 35),
+        rgb(25, 25, 25), rgb(35, 35, 35));
+    color: white;
+    cursor: pointer;
+}
+
+.expand-me .banner{
+    padding: 2pt 0 2pt 12pt;
+}
+
+.expand-me .banner h1{
+    display: inline-block;
+}
+
+#submit-partner{
+    position: relative;
+    top: 16pt;
+}
+
+#partners-label{
+    position: relative;
+    top: 16pt;
+}
+
+.delete-partner{
+    margin-top: 4pt;
+    position: relative;
+    top: 12pt;
+    left: 6pt;
+}
+
+.banner-btn{
+    transition: 0.2s;
+    position: absolute;
+    right: 50pt;
+    margin-top: 10pt;
+    text-align: right;
+}
+
+.banner-btn:hover, .banner-btn:active{
+    color: rgb(200, 200, 200);
+}
+
+.expand-me-inner, .expand-me-inner-anim{
+    display: none;
+    background-color: rgb(235, 235, 235);
+    padding: 12pt;
+    border: solid black 2pt;
+    border-top: 0;
+}
+
+.expand-me-inner-anim{
+    display: block;
+}
+
+.newsletter-inner{
+    padding-bottom: 190pt;
+}
+
+#newsletter-subscribers-container{
+    display: inline-block;
+}
+
+.newsletter-inner textarea{
+    resize: none;
+    overflow-y: auto;
+}
+
+#newsletter-subscribers-container textarea{
+    height: 6em;
+    width: 240pt;
+    cursor: default;
+}
+
+.newsletter-inner textarea:focus{
+    outline: 0;
+}
+
+#newsletter-station{
+    float: right;
+}
+
+#newsletter-subject-label{
+    position: relative;
+    bottom: 5pt;
+    font-size: 14pt;
+    font-weight: 400;
+}
+
+#newsletter-subject{
+    height: 1.5em;
+    width: 350pt;
+}
+
+#newsletter-body{
+    cursor: text;
+    width: 450pt;
+    height: 15em;
+    background-color: white;
+    border: solid black 1pt;
+    font-family: Arial, sans-serif;
+    font-size: 12pt;
+    resize: none;
+    overflow-x: auto;
+    overflow-y: auto;
+}
+
+#newsletter-body:focus{
+    outline: 0;
+}
+
+.text-division{
+    width: 100%;
+    height: calc(1em + 3pt);
+    display: block;
+}
+
+.text-division:focus{
+    outline: 0;
+}
+
+#newsletter-send{
+    transition: 0.2s;
+    float: right;
+    background-color: black;
+    color: white;
+    height: 36pt;
+    cursor: pointer;
+    border: 0;
+    font-size: 16pt;
+    border: solid black 1pt;
+    border-radius: 0;
+    margin-top: 18pt;
+}
+
+#newsletter-send:hover, #newsletter-send:hover, #newsletter-send:visited{
+    background-color: white;
+    color: black;
+}
+
+input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.shop-inner{
+    padding-bottom: 225pt;
+}
+
+.shop-inner .product-info{
+    width: 320pt;
+    height: 180pt;
+    position: absolute;
+}
+
+.shop-inner .product-info input, .product-info textarea, .product-info select{
+    position: absolute;
+    left: 50pt;
+    margin-top: 4pt;
+    width: 250pt;
+}
+
+.shop-inner .product-info textarea{
+    height: 8em;
+    overflow-y: auto;
+    resize: none;
+}
+
+.shop-inner .product-info select, .shop-inner .product-info option{
+    background-color: rgb(200, 200, 200);
+    font-family: 'Archivo Narrow', sans-serif;
+    font-size: 12pt;
+}
+
+.shop-inner .product-info select{
+    width: 256pt;
+}
+
+#product-metrics{
+    position: relative;
+    top: 4.5em;
+}
+
+#product-metrics input{
+    position: relative;
+    left: 0;
+    bottom: 2pt;
+    margin-left: 6pt;
+    margin-right: 6pt;
+    width: 15pt;
+}
+
+.shop-inner .product-display{
+    width: 265pt;
+    height: 360pt;
+    margin-left: 325pt;
+    position: absolute;
+}
+
+.large-display-container, .large-display-container-anim{
+    width: 265pt;
+    height: 265pt;
+    margin-bottom: 4pt;
+}
+
+.small-display-container, .small-display-container-anim{
+    width: 80pt;
+    height: 80pt;
+    display: inline-block;
+    margin-left: 5pt;
+}
+
+.large-display-container-anim .parallax-shield, .small-display-container-anim .parallax-shield{
+    background-color: rgb(0, 0, 50);
+}
+
+.display{
+    cursor: pointer;
+}
+
+.thumbnail-context-anim{
+    opacity: 0;
+    pointer-events: none;
+}
+
+#briefcase{
+    position: relative;
+    width: 320pt;
+    height: 175pt;
+    top: 210pt;
+}
+
+#briefcase-label{
+    background-color: black;
+    color: white;
+    padding-left: 5pt;
+}
+
+#item-categories{
+    height: 115pt;
+    border: solid black 1pt;
+    overflow-x: none;
+    overflow-y: auto;
+}
+
+.item-category{
+    height: 35pt;
+    background-image: linear-gradient(to bottom, #e3e3e3, white, #e3e3e3);
+    border-bottom: solid black 1pt;
+    padding-left: 5pt;
+    cursor: pointer;
+}
+
+.item-category:hover, .item-category:active, .item-category:visited{
+    box-shadow: inset 2px 4px 8px #888888;
+}
+
+button.item-category-exit{
+    height: 36pt;
+    margin-top: -18pt;
+    z-index: 1;
+    width: 30pt;
+    cursor: pointer;
+    font-size: 20pt;
+    background-color: red;
+    color: white;
+    border: solid black 1pt;
+    border-radius: 0;
+    float: right;
+    position: relative;
+    left: 1px;
+}
+
+button.item-category-exit:hover, button.item-category-exit:active, button.item-category-exit:visited{
+    box-shadow: inset 1px 2px 4px #000000;
+    color: rgb(220, 220, 220);
+}
+
+#item-category-new, #item-category-submit{
+    font-family: "Archivo Narrow", sans-serif;
+}
+
+#item-category-new{
+    border: solid black 1pt;
+    border-top: none;
+    border-right: none;
+    height: 35pt;
+    width: 274.5pt;
+    font-size: 16pt;
+    margin-right: -4pt;
+}
+
+#item-category-submit{
+    border: none;
+    height: 38pt;
+    width: 42pt;
+    position: relative;
+    bottom: 2pt;
+    background-color: black;
+    color: rgb(220, 220, 220);
+    cursor: pointer;
+}
+
+#item-category-submit:hover, #item-category-submit:active, #item-category-submit:visited{
+    color: white;
+}
+
+.product-options{
+    position: absolute;
+    left: 650pt;
+}
+
+#product-options-submit, #product-options-clear{
+    background-color: black;
+    border: none;
+    color: white;
+    padding: 5pt 10pt;
+    margin-top: 10pt;
+    margin-left: 4pt;
+    cursor: pointer;
+    font-size: 12pt;
+}
+
+#product-options-clear{
+    margin-top: 4pt;
+    background-color: white;
+    color: black;
+    border: solid black 2pt;
+}
+
+.wait-msg, .wait-msg-anim{
+    width: 600pt;
+    height: 450pt;
+    position: fixed;
+    left: calc(50% - 300pt);
+    top: calc(50% - 225pt);
+    background-color: white;
+    border: solid rgb(25, 25, 25) 5pt;
+    border-radius: 15pt;
+    text-align: center;
+    box-shadow: 4px 8px 16px rgb(60, 60, 60);
+    z-index: 11;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.wait-msg h1, .wait-msg-anim h1{
+    margin-top: 225pt;
+    transform: translateY(-100%);
+}
+
+.wait-msg-anim{
+    opacity: 1;
+    pointer-events: auto;
+}
+
+#attach-to-newsletter{
+    cursor: pointer;
+    height: 36pt;
+    position: relative;
+    left: 12pt;
+    top: 14pt;
+}
+
+#attach-to-newsletter img{
+    width: 25pt;
+    height: 25pt;
+    padding-top: 4pt;
+}
+
+.marketplace-inner label, .marketplace-inner input, .marketplace-inner-anim label, .marketplace-inner-anim input{
+    display: inline-block;
+}
+
+.marketplace-inner input, .marketplace-inner-anim input{
+    width: 275pt;
+}
+
+.marketplace-inner input, .marketplace-inner-anim input{
+    margin-right: 25pt;
+}
+
+.marketplace-inner button, .marketplace-inner-anim button{
+    background-color: black;
+    padding: 4pt 8pt;
+    color: white;
+    font-size: 14pt;
+    border: none;
+    cursor: pointer;
+}
+
+.marketplace-inner button, .marketplace-inner-anim button{
+    position: relative;
+    top: 12pt;
+}
+
+#marketplace-add-partner{
+    display: block;
+}
+
+#taskbar{
+    margin: 25pt 0 40pt 25pt;
+    height: 60pt;
+}
+
+#taskbar button{
+    height: 100%;
+    margin-right: 15pt;
+}
+
+#taskbar button:last-child{
+    margin-right: 0;
+}

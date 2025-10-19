@@ -1,0 +1,17 @@
+# items.json:
+
+{"items": {}}
+
+/* {"items": {"key": [{"itemInfo": {"name": "", "about": "", price: ""}, beforeImages: [], afterImages: []}]}} */
+
+# item_categories.json:
+{"itemCategories": ["Projects"] - String, "itemCategoryKeys": [0] - Integer}
+
+# newsletter_subscriber_list.json:
+{"subscribers": [{"email":"","authentication":Integer,"verified":bool,"expiration":Integer}]}
+
+# marketplace_partners.json:
+
+{"marketplace": { "names": [], "links": [] }}
+
+/* {"marketplace": { "names": ["Mike"], "links": [] }} */
